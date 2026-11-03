@@ -1,1 +1,0 @@
-Убедись, что в файле `.env` настроены переменные `YOUGILE_LOGIN`, `YOUGILE_PASSWORD`.

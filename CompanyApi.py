@@ -14,9 +14,9 @@ class CompanyApi:
         if self._token:
             return self._token
 
+        # 2. Иначе — логин/пароль и создание ключа
         login = os.getenv("YOUGILE_LOGIN")
         password = os.getenv("YOUGILE_PASSWORD")
-        company_id = company_id or os.getenv("YOUGILE_COMPANY_ID")
 
         missing = []
         if not login:
@@ -25,19 +25,22 @@ class CompanyApi:
             missing.append("YOUGILE_PASSWORD")
 
         if missing:
-            raise ValueError(f"Не заданы переменные окружения: {', '.join(missing)}")
+            raise ValueError(
+                f"Не заданы переменные окружения: {', '.join(missing)}. "
+                f"Либо задайте YOUGILE_API_KEY, либо логин/пароль."
+            )
 
-        url = f"{self.base_url}/api-v2/auth/keys"
+        url = f"{self.base_url}/api-v2/auth/keys/get"
         payload = {"login": login, "password": password}
-        if company_id:
-            payload["companyId"] = company_id
 
         try:
             response = requests.post(url, json=payload, timeout=15)
             response.raise_for_status()
             data = response.json()
         except requests.exceptions.RequestException as e:
-            raise RuntimeError(f"Ошибка запроса к YouGile: {e}") from e
+            raise RuntimeError(
+                f"Ошибка запроса к YouGile: {e}. "
+            ) from e
 
         if isinstance(data, list):
             if not data:
@@ -60,7 +63,9 @@ class CompanyApi:
 
     def request(self, method: str, path: str, **kwargs) -> requests.Response:
         if self._token is None:
-            raise RuntimeError("Токен не установлен. Вызовите get_token() сначала.")
+            raise RuntimeError(
+                "Токен не установлен. Вызовите get_token() сначала."
+            )
         url = f"{self.base_url}/{path.lstrip('/')}"
         headers = {
             "Authorization": f"Bearer {self._token}",
