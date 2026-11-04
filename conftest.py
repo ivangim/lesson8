@@ -16,7 +16,6 @@ def client():
 
 @pytest.fixture
 def created_project(client):
-    """Создаёт проект, отдаёт объект, удаляет после теста."""
     title = f"pytest-project-{uuid.uuid4().hex[:8]}"
     resp = client.request("POST", "/api-v2/projects", json={"title": title})
     assert resp.status_code == 201, resp.text

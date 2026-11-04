@@ -1,19 +1,26 @@
 import uuid
 
 
-def test_create_project_positive(created_project):
-    assert "id" in created_project
-    assert created_project["title"].startswith("pytest-project-")
-
-
-def test_debug_create(client):
+def test_create_project_positive(client):
     resp = client.request(
         "POST",
         "/api-v2/projects",
-        json={"title": "debug-project"},
+        json={"title": "pytest-project-test"},
     )
-    print(resp.status_code, resp.json())
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert "id" in body
+    client.request(
+        "PUT",
+        f"/api-v2/projects/{body['id']}",
+        json={"deleted": True},
+    )
 
+def test_create_project_empty_title_negative(client):
+    resp = client.request("POST", "/api-v2/projects", json={"title": ""})
+    assert resp.status_code == 400, resp.text
+    body = resp.json()
+    assert "error" in body
 
 def test_get_project_positive(client, created_project):
     resp = client.request(
@@ -23,7 +30,6 @@ def test_get_project_positive(client, created_project):
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["id"] == created_project["id"]
-
 
 def test_get_nonexistent_project_negative(client):
     fake_id = "00000000-0000-0000-0000-000000000000"
